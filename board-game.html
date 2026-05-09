@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>数学冒险棋 - 算术闯关大冒险！</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --primary: #FF6B6B;
+    --secondary: #4ECDC4;
+    --accent: #FFE66D;
+    --purple: #A78BFA;
+    --blue: #60A5FA;
+    --dark: #2D3436;
+    --light: #FFEAA7;
+  }
+
+  body {
+    font-family: 'Noto Sans SC', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    overflow-x: hidden;
+    color: var(--dark);
+  }
+
+  /* ===== Setup Screen ===== */
+  #setup-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .game-title {
+    font-size: 2.5em;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 3px 3px 0 var(--primary), 6px 6px 0 rgba(0,0,0,0.15);
+    margin-bottom: 10px;
+    animation: bounce-title 2s ease infinite;
+  }
+
+  @keyframes bounce-title {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .game-subtitle {
+    font-size: 1.1em;
+    color: rgba(255,255,255,0.85);
+    margin-bottom: 30px;
+  }
+
+  .setup-card {
+    background: rgba(255,255,255,0.95);
+    border-radius: 24px;
+    padding: 30px 25px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+
+  .setup-label {
+    font-size: 1.2em;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: var(--dark);
+  }
+
+  .player-select {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-bottom: 25px;
+  }
+
+  .player-btn {
+    width: 65px;
+    height: 65px;
+    border-radius: 18px;
+    border: 3px solid #e0e0e0;
+    background: #fff;
+    font-size: 1.4em;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.3s;
+    color: var(--dark);
+  }
+
+  .player-btn:hover { transform: scale(1.1); }
+  .player-btn.selected {
+    border-color: var(--primary);
+    background: linear-gradient(135deg, #FF6B6B, #ee5a24);
+    color: #fff;
+    transform: scale(1.1);
+    box-shadow: 0 5px 20px rgba(255,107,107,0.4);
+  }
+
+  .start-btn {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--primary), #ee5a24);
+    color: #fff;
+    font-size: 1.3em;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 5px 20px rgba(255,107,107,0.4);
+  }
+
+  .start-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(255,107,107,0.5); }
+
+  /* ===== Game Screen ===== */
+  #game-screen {
+    display: none;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 10px;
+  }
+
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 16px;
+    margin-bottom: 10px;
+    backdrop-filter: blur(10px);
+  }
+
+  .top-bar-title {
+    font-weight: 900;
+    font-size: 1.1em;
+    color: #fff;
+  }
+
+  .reset-btn {
+    padding: 6px 16px;
+    border: 2px solid rgba(255,255,255,0.6);
+    border-radius: 10px;
+    background: transparent;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: all 0.2s;
+  }
+
+  .reset-btn:hover { background: rgba(255,255,255,0.2); }
+
+  .players-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .player-card {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 6px;
+    border-radius: 14px;
+    text-align: center;
+    font-size: 0.72em;
+    transition: all 0.3s;
+    border: 3px solid transparent;
+    position: relative;
+  }
+
+  .player-card.active {
+    transform: scale(1.05);
+    border-color: #fff;
+    box-shadow: 0 0 20px rgba(255,255,255,0.4);
+  }
+
+  .player-card .avatar { font-size: 1.8em; margin-bottom: 2px; }
+  .player-card .p-name { font-weight: 700; color: #fff; margin-bottom: 2px; }
+  .player-card .p-pos { color: rgba(255,255,255,0.8); font-size: 0.9em; }
+  .player-card .skip-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 0.7em;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-weight: 700;
+  }
+
+  /* Board */
+  .board-container {
+    background: rgba(255,255,255,0.95);
+    border-radius: 20px;
+    padding: 10px;
+    margin-bottom: 10px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    flex: 1;
+    overflow-y: auto;
+    min-height: 260px;
+  }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 5px;
+  }
+
+  .cell {
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.65em;
+    font-weight: 700;
+    position: relative;
+    padding: 3px 2px;
+    transition: all 0.3s;
+    text-align: center;
+    min-height: 56px;
+    overflow: hidden;
+  }
+
+  .cell .cell-num {
+    position: absolute;
+    top: 2px;
+    left: 5px;
+    font-size: 0.85em;
+    opacity: 0.5;
+    font-weight: 400;
+  }
+
+  .cell .cell-icon { font-size: 1.4em; margin-bottom: 1px; }
+  .cell .cell-text { font-size: 0.72em; line-height: 1.2; }
+
+  .cell.start { background: linear-gradient(135deg, #a8edea, #fed6e3); }
+  .cell.finish { background: linear-gradient(135deg, #f093fb, #f5576c); color: #fff; }
+  .cell.normal { background: #f0f0f0; }
+  .cell.forward { background: linear-gradient(135deg, #c1dfc4, #deecdd); }
+  .cell.backward { background: linear-gradient(135deg, #ffecd2, #fcb69f); }
+  .cell.skip { background: linear-gradient(135deg, #a18cd1, #fbc2eb); color: #fff; }
+  .cell.reroll { background: linear-gradient(135deg, #ffd89b, #19547b); color: #fff; }
+  .cell.teleport { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+  .cell.math { background: linear-gradient(135deg, #f6d365, #fda085); }
+
+  .cell.highlight {
+    box-shadow: 0 0 15px rgba(255,215,0,0.8), 0 0 30px rgba(255,215,0,0.4);
+    z-index: 2;
+    transform: scale(1.08);
+  }
+
+  .cell .characters {
+    position: absolute;
+    bottom: 2px;
+    display: flex;
+    gap: 1px;
+  }
+
+  .cell .char-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7em;
+    border: 2px solid #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+
+  /* Bottom Controls */
+  .controls {
+    background: rgba(255,255,255,0.95);
+    border-radius: 20px;
+    padding: 12px 15px;
+    box-shadow: 0 -5px 30px rgba(0,0,0,0.15);
+  }
+
+  .current-turn {
+    text-align: center;
+    font-size: 1em;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .current-turn .turn-avatar {
+    font-size: 1.5em;
+    vertical-align: middle;
+  }
+
+  .dice-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 8px;
+  }
+
+  .dice {
+    width: 72px;
+    height: 72px;
+    background: #fff;
+    border-radius: 16px;
+    border: 3px solid var(--dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2em;
+    font-weight: 900;
+    box-shadow: 0 4px 0 var(--dark);
+    transition: all 0.1s;
+    user-select: none;
+  }
+
+  .dice.rolling {
+    animation: dice-shake 0.1s infinite;
+  }
+
+  @keyframes dice-shake {
+    0% { transform: rotate(0deg) scale(1); }
+    25% { transform: rotate(15deg) scale(1.1); }
+    50% { transform: rotate(-10deg) scale(0.95); }
+    75% { transform: rotate(5deg) scale(1.05); }
+    100% { transform: rotate(0deg) scale(1); }
+  }
+
+  .roll-btn {
+    padding: 14px 36px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--primary), #ee5a24);
+    color: #fff;
+    font-size: 1.2em;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 5px 0 #c0392b, 0 8px 20px rgba(255,107,107,0.3);
+  }
+
+  .roll-btn:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #c0392b, 0 10px 25px rgba(255,107,107,0.4); }
+  .roll-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #c0392b; }
+  .roll-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .event-msg {
+    text-align: center;
+    min-height: 24px;
+    font-size: 0.85em;
+    font-weight: 700;
+    color: var(--dark);
+    padding: 4px;
+  }
+
+  /* ===== Math Quiz Modal ===== */
+  .quiz-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 90;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+  }
+
+  .quiz-overlay.show { display: flex; }
+
+  .quiz-card {
+    background: #fff;
+    border-radius: 24px;
+    padding: 30px 25px;
+    text-align: center;
+    max-width: 360px;
+    width: 90%;
+    animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  .quiz-card .quiz-title {
+    font-size: 1.3em;
+    font-weight: 900;
+    margin-bottom: 8px;
+    color: var(--primary);
+  }
+
+  .quiz-card .quiz-question {
+    font-size: 2.2em;
+    font-weight: 900;
+    margin: 15px 0;
+    padding: 15px;
+    background: linear-gradient(135deg, #fff9c4, #fff176);
+    border-radius: 16px;
+    color: var(--dark);
+    letter-spacing: 2px;
+  }
+
+  .quiz-card .quiz-hint {
+    font-size: 0.85em;
+    color: #888;
+    margin-bottom: 15px;
+  }
+
+  .quiz-input-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .quiz-input {
+    width: 120px;
+    padding: 12px 16px;
+    border: 3px solid #e0e0e0;
+    border-radius: 14px;
+    font-size: 1.5em;
+    font-weight: 900;
+    text-align: center;
+    outline: none;
+    transition: border-color 0.3s;
+  }
+
+  .quiz-input:focus { border-color: var(--secondary); }
+
+  .quiz-submit {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--secondary), #2ecc71);
+    color: #fff;
+    font-size: 1.1em;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .quiz-submit:hover { transform: scale(1.05); }
+
+  .quiz-result {
+    margin-top: 12px;
+    font-size: 1.1em;
+    font-weight: 900;
+    min-height: 28px;
+  }
+
+  .quiz-result.correct { color: #2ecc71; }
+  .quiz-result.wrong { color: var(--primary); }
+
+  /* Win Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(5px);
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: #fff;
+    border-radius: 24px;
+    padding: 35px 30px;
+    text-align: center;
+    max-width: 340px;
+    width: 90%;
+    animation: pop-in 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  @keyframes pop-in {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .modal .win-icon { font-size: 4em; margin-bottom: 10px; }
+  .modal .win-title { font-size: 1.8em; font-weight: 900; margin-bottom: 5px; }
+  .modal .win-sub { font-size: 1em; color: #888; margin-bottom: 20px; }
+
+  .modal .play-again-btn {
+    padding: 14px 40px;
+    border: none;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--primary), #ee5a24);
+    color: #fff;
+    font-size: 1.1em;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .modal .play-again-btn:hover { transform: scale(1.05); }
+
+  .confetti {
+    position: fixed;
+    top: -10px;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    z-index: 101;
+    animation: confetti-fall linear forwards;
+    pointer-events: none;
+  }
+
+  @keyframes confetti-fall {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+
+  .stars {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+
+  .star {
+    position: absolute;
+    font-size: 1.5em;
+    animation: float-star 6s ease-in-out infinite;
+    opacity: 0.3;
+  }
+
+  @keyframes float-star {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-20px) rotate(180deg); }
+  }
+
+  @media (max-width: 400px) {
+    .game-title { font-size: 1.8em; }
+    .cell { min-height: 50px; font-size: 0.6em; }
+    .dice { width: 60px; height: 60px; font-size: 1.8em; }
+    .roll-btn { padding: 12px 28px; font-size: 1.05em; }
+    .quiz-card .quiz-question { font-size: 1.8em; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<!-- ===== Setup Screen ===== -->
+<div id="setup-screen">
+  <div class="game-title">🧮 数学冒险棋</div>
+  <div class="game-subtitle">算术闯关！算对前进，算错后退！</div>
+  <div class="setup-card">
+    <div class="setup-label">选择玩家人数</div>
+    <div class="player-select">
+      <button class="player-btn" data-count="1" onclick="selectPlayers(1)">1</button>
+      <button class="player-btn selected" data-count="2" onclick="selectPlayers(2)">2</button>
+      <button class="player-btn" data-count="3" onclick="selectPlayers(3)">3</button>
+      <button class="player-btn" data-count="4" onclick="selectPlayers(4)">4</button>
+    </div>
+    <button class="start-btn" onclick="startGame()">开始冒险！🚀</button>
+  </div>
+</div>
+
+<!-- ===== Game Screen ===== -->
+<div id="game-screen">
+  <div class="top-bar">
+    <span class="top-bar-title">🧮 数学冒险棋</span>
+    <button class="reset-btn" onclick="resetGame()">重新开始</button>
+  </div>
+
+  <div class="players-bar" id="players-bar"></div>
+
+  <div class="board-container">
+    <div class="board" id="board"></div>
+  </div>
+
+  <div class="controls">
+    <div class="current-turn" id="current-turn"></div>
+    <div class="dice-area">
+      <div class="dice" id="dice">?</div>
+      <button class="roll-btn" id="roll-btn" onclick="rollDice()">掷骰子！</button>
+    </div>
+    <div class="event-msg" id="event-msg"></div>
+  </div>
+</div>
+
+<!-- Math Quiz Modal -->
+<div class="quiz-overlay" id="quiz-modal">
+  <div class="quiz-card">
+    <div class="quiz-title" id="quiz-title">📝 算术挑战！</div>
+    <div class="quiz-question" id="quiz-question">3 + 5 = ?</div>
+    <div class="quiz-hint">答对前进2格，答错后退1格</div>
+    <div class="quiz-input-row">
+      <input type="number" class="quiz-input" id="quiz-input" placeholder="?" autocomplete="off">
+      <button class="quiz-submit" id="quiz-submit" onclick="submitAnswer()">确定</button>
+    </div>
+    <div class="quiz-result" id="quiz-result"></div>
+  </div>
+</div>
+
+<!-- Win Modal -->
+<div class="modal-overlay" id="win-modal">
+  <div class="modal">
+    <div class="win-icon" id="win-icon">🏆</div>
+    <div class="win-title" id="win-title">恭喜获胜！</div>
+    <div class="win-sub" id="win-sub">你到达了终点！</div>
+    <button class="play-again-btn" onclick="resetGame()">再来一局！</button>
+  </div>
+</div>
+
+<script>
+// ===== Game Config =====
+const TOTAL_CELLS = 30;
+const PLAYER_CONFIGS = [
+  { name: '勇者', color: '#FF6B6B', avatar: '🗡️', charIcon: '🟠' },
+  { name: '法师', color: '#4ECDC4', avatar: '🧙', charIcon: '🟢' },
+  { name: '游侠', color: '#A78BFA', avatar: '🏹', charIcon: '🔵' },
+  { name: '骑士', color: '#F39C12', avatar: '🛡️', charIcon: '🟡' }
+];
+
+const EVENT_TYPES = {
+  normal: { icon: '', text: '' },
+  forward: { icon: '⚡', text: '' },
+  backward: { icon: '🔥', text: '' },
+  skip: { icon: '💤', text: '停一回合' },
+  reroll: { icon: '🎲', text: '再掷一次' },
+  teleport: { icon: '🌀', text: '' },
+  math: { icon: '📝', text: '' },
+  start: { icon: '🏁', text: '起点' },
+  finish: { icon: '🏆', text: '终点' }
+};
+
+let playerCount = 2;
+let players = [];
+let currentTurn = 0;
+let isRolling = false;
+let cellEvents = [];
+let pendingMathPlayer = null;
+let pendingMathPos = 0;
+
+// ===== Math Question Generator =====
+function generateMathQuestion() {
+  const ops = ['+', '-', '×', '÷'];
+  const op = ops[Math.floor(Math.random() * ops.length)];
+  let a, b, answer;
+
+  switch (op) {
+    case '+':
+      a = Math.floor(Math.random() * 50) + 1;
+      b = Math.floor(Math.random() * 50) + 1;
+      answer = a + b;
+      break;
+    case '-':
+      a = Math.floor(Math.random() * 50) + 10;
+      b = Math.floor(Math.random() * a) + 1;
+      answer = a - b;
+      break;
+    case '×':
+      a = Math.floor(Math.random() * 12) + 1;
+      b = Math.floor(Math.random() * 12) + 1;
+      answer = a * b;
+      break;
+    case '÷':
+      b = Math.floor(Math.random() * 9) + 2;
+      answer = Math.floor(Math.random() * 12) + 1;
+      a = b * answer;
+      break;
+  }
+
+  return { question: `${a} ${op} ${b} = ?`, answer: answer };
+}
+
+// ===== Setup =====
+function selectPlayers(n) {
+  playerCount = n;
+  document.querySelectorAll('.player-btn').forEach(btn => {
+    btn.classList.toggle('selected', parseInt(btn.dataset.count) === n);
+  });
+}
+
+function startGame() {
+  document.getElementById('setup-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'flex';
+  initGame();
+}
+
+function resetGame() {
+  document.getElementById('win-modal').classList.remove('show');
+  document.getElementById('quiz-modal').classList.remove('show');
+  document.querySelectorAll('.confetti').forEach(c => c.remove());
+  initGame();
+}
+
+function initGame() {
+  players = [];
+  currentTurn = 0;
+  isRolling = false;
+  pendingMathPlayer = null;
+
+  for (let i = 0; i < playerCount; i++) {
+    players.push({
+      ...PLAYER_CONFIGS[i],
+      position: 0,
+      skip: false
+    });
+  }
+
+  generateBoard();
+  renderPlayersBar();
+  renderBoard();
+  updateTurnDisplay();
+  document.getElementById('event-msg').textContent = '';
+  document.getElementById('dice').textContent = '?';
+  document.getElementById('roll-btn').disabled = false;
+}
+
+// ===== Board Generation =====
+function generateBoard() {
+  cellEvents = [];
+
+  // 30格中20个算术题：首格起点+末格终点=2格，剩余28格中20个算术、8个其他
+  // 先确定哪些格子是算术题（排除0和29）
+  const middleCells = [];
+  for (let i = 1; i < TOTAL_CELLS - 1; i++) middleCells.push(i);
+
+  // 随机打乱，取前20个做算术题
+  const shuffled = middleCells.sort(() => Math.random() - 0.5);
+  const mathCells = new Set(shuffled.slice(0, 20));
+
+  for (let i = 0; i < TOTAL_CELLS; i++) {
+    if (i === 0) {
+      cellEvents.push({ type: 'start', value: 0 });
+    } else if (i === TOTAL_CELLS - 1) {
+      cellEvents.push({ type: 'finish', value: 0 });
+    } else if (mathCells.has(i)) {
+      const mq = generateMathQuestion();
+      cellEvents.push({
+        type: 'math',
+        value: 0,
+        text: mq.question,
+        question: mq.question,
+        answer: mq.answer
+      });
+    } else {
+      // 剩余8个格子分配其他事件
+      const rand = Math.random();
+      if (rand < 0.25) {
+        const steps = Math.floor(Math.random() * 3) + 1;
+        cellEvents.push({ type: 'forward', value: steps, text: `前进${steps}格` });
+      } else if (rand < 0.50) {
+        const steps = Math.floor(Math.random() * 3) + 1;
+        cellEvents.push({ type: 'backward', value: steps, text: `后退${steps}格` });
+      } else if (rand < 0.65) {
+        cellEvents.push({ type: 'skip', value: 1, text: '停一回合' });
+      } else if (rand < 0.80) {
+        cellEvents.push({ type: 'reroll', value: 0, text: '再掷一次' });
+      } else {
+        const target = Math.floor(Math.random() * (TOTAL_CELLS - 2)) + 1;
+        cellEvents.push({ type: 'teleport', value: target, text: `传送→${target}格` });
+      }
+    }
+  }
+}
+
+// ===== Rendering =====
+function renderPlayersBar() {
+  const bar = document.getElementById('players-bar');
+  bar.innerHTML = players.map((p, i) => `
+    <div class="player-card" id="pcard-${i}" style="background:${p.color}">
+      <div class="avatar">${p.avatar}</div>
+      <div class="p-name">${p.name}</div>
+      <div class="p-pos" id="ppos-${i}">第 0 格</div>
+    </div>
+  `).join('');
+}
+
+function renderBoard() {
+  const board = document.getElementById('board');
+  const rows = 6;
+  const cols = 5;
+  const orderedCells = [];
+
+  for (let row = 0; row < rows; row++) {
+    const startIdx = row * cols;
+    const rowCells = [];
+    for (let i = startIdx; i < startIdx + cols && i < TOTAL_CELLS; i++) {
+      rowCells.push(i);
+    }
+    if (row % 2 === 1) {
+      rowCells.reverse();
+    }
+    orderedCells.unshift(...rowCells);
+  }
+
+  board.innerHTML = '';
+
+  orderedCells.forEach(idx => {
+    if (idx >= TOTAL_CELLS) return;
+    const event = cellEvents[idx];
+    const cell = document.createElement('div');
+    cell.className = `cell ${event.type}`;
+    cell.id = `cell-${idx}`;
+
+    const eventInfo = EVENT_TYPES[event.type];
+    const icon = eventInfo.icon || '';
+    let text = event.text || eventInfo.text || '';
+
+    // For math cells, show shortened question
+    if (event.type === 'math') {
+      text = event.question.replace(' = ?', '');
+    }
+
+    cell.innerHTML = `
+      <span class="cell-num">${idx}</span>
+      <span class="cell-icon">${icon}</span>
+      <span class="cell-text">${text}</span>
+      <div class="characters" id="chars-${idx}"></div>
+    `;
+
+    board.appendChild(cell);
+  });
+
+  updateCharacters();
+}
+
+function updateCharacters() {
+  for (let i = 0; i < TOTAL_CELLS; i++) {
+    const slot = document.getElementById(`chars-${i}`);
+    if (slot) slot.innerHTML = '';
+  }
+
+  players.forEach((p, idx) => {
+    const slot = document.getElementById(`chars-${p.position}`);
+    if (slot) {
+      const ch = document.createElement('span');
+      ch.className = 'char-icon';
+      ch.style.background = p.color;
+      ch.textContent = p.avatar;
+      slot.appendChild(ch);
+    }
+  });
+
+  players.forEach((p, i) => {
+    const posEl = document.getElementById(`ppos-${i}`);
+    if (posEl) posEl.textContent = `第 ${p.position} 格`;
+  });
+
+  players.forEach((p, i) => {
+    const card = document.getElementById(`pcard-${i}`);
+    if (card) {
+      card.classList.toggle('active', i === currentTurn);
+      const existing = card.querySelector('.skip-badge');
+      if (existing) existing.remove();
+      if (p.skip) {
+        const badge = document.createElement('span');
+        badge.className = 'skip-badge';
+        badge.textContent = '停';
+        card.appendChild(badge);
+      }
+    }
+  });
+
+  document.querySelectorAll('.cell.highlight').forEach(c => c.classList.remove('highlight'));
+  const currentCell = document.getElementById(`cell-${players[currentTurn].position}`);
+  if (currentCell) currentCell.classList.add('highlight');
+}
+
+function updateTurnDisplay() {
+  const p = players[currentTurn];
+  document.getElementById('current-turn').innerHTML = `
+    <span class="turn-avatar">${p.avatar}</span> ${p.name} 的回合
+  `;
+}
+
+// ===== Dice =====
+function rollDice() {
+  if (isRolling) return;
+  isRolling = true;
+  const rollBtn = document.getElementById('roll-btn');
+  rollBtn.disabled = true;
+
+  const dice = document.getElementById('dice');
+  dice.classList.add('rolling');
+
+  const player = players[currentTurn];
+  if (player.skip) {
+    player.skip = false;
+    document.getElementById('event-msg').textContent = `${player.name} 被跳过了一回合 😴`;
+    dice.classList.remove('rolling');
+    setTimeout(() => {
+      nextTurn();
+    }, 1200);
+    return;
+  }
+
+  let rollCount = 0;
+  const rollInterval = setInterval(() => {
+    dice.textContent = Math.floor(Math.random() * 6) + 1;
+    rollCount++;
+    if (rollCount > 15) {
+      clearInterval(rollInterval);
+      const result = Math.floor(Math.random() * 6) + 1;
+      dice.textContent = result;
+      dice.classList.remove('rolling');
+      movePlayer(player, result);
+    }
+  }, 80);
+}
+
+function movePlayer(player, steps) {
+  const oldPos = player.position;
+  let newPos = oldPos + steps;
+
+  if (newPos >= TOTAL_CELLS - 1) {
+    newPos = TOTAL_CELLS - 1;
+  }
+
+  animateMovement(player, oldPos, newPos, () => {
+    player.position = newPos;
+    updateCharacters();
+
+    if (newPos >= TOTAL_CELLS - 1) {
+      setTimeout(() => showWin(player), 500);
+      return;
+    }
+
+    handleCellEvent(player, newPos);
+  });
+}
+
+function animateMovement(player, from, to, callback) {
+  if (from === to) {
+    callback();
+    return;
+  }
+
+  const step = from < to ? 1 : -1;
+  let current = from;
+
+  function stepMove() {
+    current += step;
+    player.position = Math.max(0, Math.min(TOTAL_CELLS - 1, current));
+    updateCharacters();
+
+    if (current === to || current >= TOTAL_CELLS - 1 || current <= 0) {
+      callback();
+    } else {
+      setTimeout(stepMove, 200);
+    }
+  }
+
+  setTimeout(stepMove, 200);
+}
+
+function handleCellEvent(player, pos) {
+  const event = cellEvents[pos];
+  const msgEl = document.getElementById('event-msg');
+
+  switch (event.type) {
+    case 'math':
+      // Show math quiz
+      msgEl.textContent = `${player.name} 踩到📝算术题！`;
+      setTimeout(() => {
+        showMathQuiz(player, pos, event);
+      }, 600);
+      return;
+
+    case 'forward':
+      msgEl.textContent = `${player.name} 踩到⚡${event.text}！`;
+      setTimeout(() => {
+        animateMovement(player, pos, Math.min(pos + event.value, TOTAL_CELLS - 1), () => {
+          player.position = Math.min(pos + event.value, TOTAL_CELLS - 1);
+          updateCharacters();
+          if (player.position >= TOTAL_CELLS - 1) {
+            setTimeout(() => showWin(player), 500);
+            return;
+          }
+          nextTurn();
+        });
+      }, 800);
+      return;
+
+    case 'backward':
+      msgEl.textContent = `${player.name} 踩到🔥${event.text}！`;
+      setTimeout(() => {
+        animateMovement(player, pos, Math.max(pos - event.value, 0), () => {
+          player.position = Math.max(pos - event.value, 0);
+          updateCharacters();
+          nextTurn();
+        });
+      }, 800);
+      return;
+
+    case 'skip':
+      player.skip = true;
+      msgEl.textContent = `${player.name} 踩到💤${event.text}！下回合不能动`;
+      break;
+
+    case 'reroll':
+      msgEl.textContent = `${player.name} 踩到🎲${event.text}！`;
+      isRolling = false;
+      document.getElementById('roll-btn').disabled = false;
+      updateCharacters();
+      return;
+
+    case 'teleport':
+      msgEl.textContent = `${player.name} 踩到🌀${event.text}！`;
+      setTimeout(() => {
+        animateMovement(player, pos, event.value, () => {
+          player.position = event.value;
+          updateCharacters();
+          if (player.position >= TOTAL_CELLS - 1) {
+            setTimeout(() => showWin(player), 500);
+            return;
+          }
+          nextTurn();
+        });
+      }, 800);
+      return;
+
+    default:
+      msgEl.textContent = `${player.name} 安全通过～`;
+      break;
+  }
+
+  setTimeout(() => {
+    nextTurn();
+  }, 1200);
+}
+
+// ===== Math Quiz =====
+function showMathQuiz(player, pos, event) {
+  pendingMathPlayer = player;
+  pendingMathPos = pos;
+
+  const modal = document.getElementById('quiz-modal');
+  document.getElementById('quiz-title').textContent = `📝 ${player.name} 的算术挑战！`;
+  document.getElementById('quiz-question').textContent = event.question;
+  document.getElementById('quiz-input').value = '';
+  document.getElementById('quiz-result').textContent = '';
+  document.getElementById('quiz-result').className = 'quiz-result';
+  modal.classList.add('show');
+
+  // Focus input after animation
+  setTimeout(() => {
+    document.getElementById('quiz-input').focus();
+  }, 400);
+}
+
+function submitAnswer() {
+  if (!pendingMathPlayer) return;
+
+  const input = document.getElementById('quiz-input');
+  const userAnswer = parseInt(input.value);
+  const event = cellEvents[pendingMathPos];
+  const resultEl = document.getElementById('quiz-result');
+
+  if (isNaN(userAnswer)) {
+    resultEl.textContent = '请输入数字！';
+    resultEl.className = 'quiz-result wrong';
+    return;
+  }
+
+  const player = pendingMathPlayer;
+  const pos = pendingMathPos;
+
+  if (userAnswer === event.answer) {
+    // Correct! Move forward 2
+    resultEl.textContent = `✅ 正确！前进2格！`;
+    resultEl.className = 'quiz-result correct';
+
+    setTimeout(() => {
+      document.getElementById('quiz-modal').classList.remove('show');
+      const newPos = Math.min(pos + 2, TOTAL_CELLS - 1);
+      animateMovement(player, pos, newPos, () => {
+        player.position = newPos;
+        updateCharacters();
+        if (player.position >= TOTAL_CELLS - 1) {
+          setTimeout(() => showWin(player), 500);
+          return;
+        }
+        nextTurn();
+      });
+    }, 1200);
+  } else {
+    // Wrong! Move back 1
+    resultEl.textContent = `❌ 错误！正确答案是 ${event.answer}，后退1格`;
+    resultEl.className = 'quiz-result wrong';
+
+    setTimeout(() => {
+      document.getElementById('quiz-modal').classList.remove('show');
+      const newPos = Math.max(pos - 1, 0);
+      animateMovement(player, pos, newPos, () => {
+        player.position = newPos;
+        updateCharacters();
+        nextTurn();
+      });
+    }, 1800);
+  }
+
+  pendingMathPlayer = null;
+}
+
+// Allow Enter key to submit
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.getElementById('quiz-modal').classList.contains('show')) {
+    submitAnswer();
+  }
+});
+
+// ===== Turn Management =====
+function nextTurn() {
+  currentTurn = (currentTurn + 1) % players.length;
+  isRolling = false;
+  document.getElementById('roll-btn').disabled = false;
+  updateTurnDisplay();
+  updateCharacters();
+}
+
+// ===== Win =====
+function showWin(player) {
+  const modal = document.getElementById('win-modal');
+  document.getElementById('win-icon').textContent = player.avatar;
+  document.getElementById('win-title').textContent = `${player.name} 获胜！🎉`;
+  document.getElementById('win-sub').textContent = '恭喜到达终点！';
+  modal.classList.add('show');
+
+  const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#A78BFA', '#60A5FA', '#f093fb'];
+  for (let i = 0; i < 60; i++) {
+    setTimeout(() => {
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.left = Math.random() * 100 + 'vw';
+      confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+      confetti.style.width = (Math.random() * 8 + 6) + 'px';
+      confetti.style.height = (Math.random() * 8 + 6) + 'px';
+      document.body.appendChild(confetti);
+      setTimeout(() => confetti.remove(), 4000);
+    }, i * 50);
+  }
+
+  isRolling = true;
+  document.getElementById('roll-btn').disabled = true;
+}
+
+// ===== Background Stars =====
+function createStars() {
+  const container = document.getElementById('stars');
+  const emojis = ['✨', '⭐', '🌟', '💫', '🧮'];
+  for (let i = 0; i < 15; i++) {
+    const star = document.createElement('span');
+    star.className = 'star';
+    star.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 100 + '%';
+    star.style.animationDelay = Math.random() * 6 + 's';
+    star.style.fontSize = (Math.random() * 1 + 0.8) + 'em';
+    container.appendChild(star);
+  }
+}
+
+createStars();
+</script>
+
+</body>
+</html>
